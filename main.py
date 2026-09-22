@@ -212,7 +212,13 @@ class Pipeline(QObject):
                     # RMS Check to avoid partial hallucination on silence
                     rms = np.sqrt(np.mean(partial_buffer**2))
                     if rms > self.audio.silence_threshold:
-                        transcribe_executor.submit(self._process_partial_chunk, partial_buffer, chunk_id, prompt)
+                        transcribe_executor.submit(
+                            self._process_partial_chunk,
+                            partial_buffer,
+                            chunk_id,
+                            prompt,
+                            translate_executor
+                        )
                     
                     last_update_time = now
                     
@@ -222,13 +228,21 @@ class Pipeline(QObject):
             transcribe_executor.shutdown(wait=False)
             translate_executor.shutdown(wait=False)
 
-    def _process_partial_chunk(self, audio_data, chunk_id, prompt=""):
-        """Transcribe and update UI (No translation)"""
+    def _process_partial_chunk(self, audio_data, chunk_id, prompt="", translate_executor=None):
+        """Transcribe partial audio and translate asynchronously."""
         try:
-            # Use accumulated context as prompt
             text = self.transcriber.transcribe(audio_data, prompt=prompt)
             if text:
+                # Show English immediately.
                 self.signals.update_text.emit(chunk_id, text, "")
+
+                # Translate partial text asynchronously.
+                if translate_executor:
+                    translate_executor.submit(
+                        self._run_translation,
+                        text,
+                        chunk_id
+                    )
         except Exception as e:
             print(f"[Partial {chunk_id}] Error: {e}")
 

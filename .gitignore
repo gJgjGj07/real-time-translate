@@ -1,5 +1,29 @@
-__pycache__
-transcripts
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.so
+
+# macOS
 .DS_Store
+
+# Local configuration / secrets
 config.ini
-.venv
+.env
+.env.*
+
+# Logs / transcripts
+*.log
+transcripts/
+LectureTranscripts/
+
+# Models / caches
+.cache/
+models/
+
+# Backups created during debugging
+*.backup
+*.backup.*
+*.CLASSROOM_WORKING
+*.backup-working
